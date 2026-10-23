@@ -1,0 +1,1064 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7f3">
+  <title>Expence Tracker — student expense tracker</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f3;
+      --surface: #fff;
+      --ink: #20271f;
+      --muted: #7f887d;
+      --line: #e9ece5;
+      --green: #347d57;
+      --green-dark: #245b3e;
+      --green-soft: #eaf3ed;
+      --lime: #d9f06b;
+      --orange: #e89a65;
+      --shadow: 0 8px 30px rgba(42, 58, 43, .055);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: var(--bg); color: var(--ink); }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+    .auth-screen { display: grid; min-height: 100vh; place-items: center; padding: 24px; }
+    .auth-card { width: min(430px, 100%); padding: 29px; border: 1px solid var(--line); border-radius: 22px; background: var(--surface); box-shadow: var(--shadow); }
+    .auth-brand { display: flex; align-items: center; gap: 11px; margin-bottom: 26px; }
+    .auth-brand strong { display: block; font-size: 20px; letter-spacing: -.6px; }
+    .auth-brand small { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+    .auth-card h1 { font-size: 25px; letter-spacing: -.8px; }
+    .auth-intro { margin: 8px 0 20px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 19px; padding: 4px; border-radius: 11px; background: var(--bg); }
+    .auth-tab { min-height: 36px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 650; }
+    .auth-tab.active { background: white; color: var(--green); box-shadow: 0 1px 4px rgba(32,39,31,.1); }
+    .auth-form { display: grid; gap: 13px; }
+    .auth-form .field input { height: 44px; }
+    .auth-form .primary-btn { width: 100%; margin-top: 4px; }
+    .auth-message { min-height: 17px; margin: 12px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .auth-message.error { color: #b54732; }
+    .auth-message.success { color: var(--green); }
+    .auth-setup { margin-top: 13px; padding: 11px 12px; border-radius: 10px; background: #fbf3e8; color: #795a33; font-size: 10px; line-height: 1.6; }
+    .auth-setup[hidden], .auth-name-field[hidden], .auth-screen[hidden], .app[hidden] { display: none !important; }
+    .session-actions { padding: 12px 0 0; border-top: 1px solid var(--line); }
+    .sign-out-btn { width: 100%; min-height: 36px; border: 1px solid var(--line); border-radius: 9px; background: white; color: #a44132; font-size: 11px; font-weight: 650; }
+    .sign-out-btn:hover { background: #fbefeb; }
+    .app[hidden] { display: none; }
+    .app { width: min(1440px, 100%); margin: 0 auto; padding: 28px 42px 48px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 38px; }
+    .brand { display: flex; align-items: center; gap: 11px; font-size: 21px; font-weight: 750; letter-spacing: -.7px; }
+    .brand-mark { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 13px; background: var(--green); color: white; }
+    .brand-mark svg { width: 22px; height: 22px; }
+    .brand small { display: block; margin-top: 1px; color: var(--muted); font-size: 11px; font-weight: 500; letter-spacing: .1px; }
+    .top-actions { display: flex; align-items: center; gap: 12px; }
+    .currency-select { padding: 10px 12px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); color: var(--ink); }
+    .profile-wrap { position: relative; }
+    .profile-trigger { display: flex; align-items: center; gap: 9px; padding: 4px 10px 4px 4px; border: 1px solid var(--line); border-radius: 24px; background: var(--surface); color: var(--ink); text-align: left; }
+    .avatar { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 50%; background: #f1dfc7; color: #73513a; font-size: 13px; font-weight: 700; }
+    .profile-trigger-name { max-width: 120px; overflow: hidden; font-size: 12px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+    .profile-chevron { color: var(--muted); font-size: 11px; }
+    .profile-popover { position: absolute; z-index: 4; top: calc(100% + 10px); right: 0; display: none; width: min(310px, calc(100vw - 30px)); padding: 17px; border: 1px solid var(--line); border-radius: 16px; background: white; box-shadow: 0 14px 42px rgba(34, 45, 34, .14); }
+    .profile-popover.open { display: block; }
+    .profile-popover-heading { display: flex; align-items: center; gap: 11px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+    .profile-popover-heading .avatar { width: 42px; height: 42px; }
+    .profile-name { overflow: hidden; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+    .profile-subtitle { margin-top: 4px; color: var(--muted); font-size: 10px; }
+    .profile-details { display: grid; gap: 11px; padding: 14px 0; }
+    .profile-detail-label { margin-bottom: 3px; color: var(--muted); font-size: 10px; }
+    .profile-detail-value { overflow-wrap: anywhere; color: var(--ink); font-size: 12px; font-weight: 550; }
+    .profile-edit { width: 100%; min-height: 37px; border: 1px solid var(--line); border-radius: 10px; background: white; color: var(--green); font-size: 11px; font-weight: 650; }
+    .profile-edit:hover { background: var(--green-soft); }
+    .welcome { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 25px; }
+    .welcome-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+    .eyebrow { margin: 0 0 8px; color: var(--green); font-size: 11px; font-weight: 750; letter-spacing: 1.5px; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(26px, 3.2vw, 36px); font-weight: 680; letter-spacing: -1.5px; }
+    .welcome p:not(.eyebrow) { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+    .primary-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 17px; border: 0; border-radius: 12px; background: var(--green); color: white; font-size: 13px; font-weight: 650; transition: background .15s, transform .15s; }
+    .primary-btn:hover { background: var(--green-dark); transform: translateY(-1px); }
+    .primary-btn svg { width: 17px; height: 17px; }
+    .money-btn { border: 1px solid #c9dfd0; background: white; color: var(--green); }
+    .money-btn:hover { border-color: var(--green); background: var(--green-soft); }
+    .summary-grid { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 17px; margin-bottom: 18px; }
+    .card { border: 1px solid rgba(226, 231, 222, .8); border-radius: 19px; background: var(--surface); box-shadow: var(--shadow); }
+    .summary-card { min-height: 163px; padding: 22px 23px; }
+    .summary-card.budget-card { background: var(--green); color: white; border-color: var(--green); }
+    .card-label { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 12px; font-weight: 550; }
+    .budget-card .card-label { color: rgba(255,255,255,.75); }
+    .card-label .icon-wrap { display: grid; width: 31px; height: 31px; place-items: center; border-radius: 10px; background: var(--green-soft); color: var(--green); }
+    .budget-card .icon-wrap { background: rgba(255,255,255,.15); color: white; }
+    .icon-wrap svg { width: 16px; height: 16px; }
+    .amount { margin: 15px 0 5px; font-size: clamp(25px, 3vw, 32px); font-weight: 700; letter-spacing: -1.1px; }
+    .card-foot { color: var(--muted); font-size: 11px; }
+    .budget-card .card-foot { color: rgba(255,255,255,.75); }
+    .budget-progress { height: 5px; margin-top: 16px; overflow: hidden; border-radius: 6px; background: rgba(255,255,255,.24); }
+    .budget-progress span { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--lime); transition: width .25s; }
+    .budget-edit { padding: 3px 0; border: 0; background: transparent; color: inherit; font-size: 11px; text-decoration: underline; text-underline-offset: 3px; opacity: .86; }
+    .main-grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(270px, .85fr); gap: 18px; align-items: start; }
+    .left-column, .right-column { display: grid; gap: 18px; }
+    .panel { padding: 22px 23px; }
+    .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 20px; }
+    h2 { margin: 0; font-size: 15px; font-weight: 680; letter-spacing: -.2px; }
+    .panel-subtitle { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+    .month-pill { padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; background: white; color: #5f685d; font-size: 11px; }
+    .chart { display: flex; height: 175px; align-items: end; justify-content: space-around; gap: 14px; padding: 8px 8px 0; border-bottom: 1px solid var(--line); }
+    .chart-column { display: flex; height: 100%; min-width: 24px; flex: 1; flex-direction: column; align-items: center; justify-content: end; gap: 9px; }
+    .chart-value { color: var(--muted); font-size: 9px; white-space: nowrap; }
+    .chart-bar { width: min(34px, 72%); min-height: 3px; border-radius: 7px 7px 2px 2px; background: #cfe1d4; transition: height .25s; }
+    .chart-column.current .chart-bar { background: var(--green); }
+    .chart-month { padding-bottom: 10px; color: var(--muted); font-size: 10px; }
+    .chart-column.current .chart-month { color: var(--green); font-weight: 700; }
+    .category-list { display: grid; gap: 17px; }
+    .category-row { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 10px; }
+    .category-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 11px; font-size: 15px; }
+    .category-info { min-width: 0; }
+    .category-name { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 7px; font-size: 11px; font-weight: 600; }
+    .category-name span:last-child { color: var(--muted); font-size: 10px; font-weight: 500; }
+    .category-track { height: 5px; overflow: hidden; border-radius: 5px; background: #f0f2ed; }
+    .category-track span { display: block; height: 100%; border-radius: inherit; background: var(--green); }
+    .category-total { font-size: 11px; font-weight: 650; white-space: nowrap; }
+    .transactions { padding-bottom: 9px; }
+    .transaction-controls { display: flex; align-items: center; gap: 8px; }
+    .search-input, .filter-select { max-width: 155px; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; background: white; color: var(--ink); font-size: 11px; }
+    .search-input { width: 142px; }
+    .transaction-list { display: grid; }
+    .transaction-row { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto auto auto; align-items: center; gap: 12px; min-height: 65px; border-top: 1px solid #f0f1ed; }
+    .transaction-icon { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 12px; font-size: 16px; }
+    .transaction-title { overflow: hidden; font-size: 12px; font-weight: 630; text-overflow: ellipsis; white-space: nowrap; }
+    .transaction-meta { margin-top: 4px; color: var(--muted); font-size: 10px; }
+    .transaction-category { color: var(--muted); font-size: 10px; }
+    .transaction-amount { font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .transaction-amount.income { color: var(--green); }
+    .transaction-actions { display: flex; align-items: center; gap: 3px; }
+    .edit-btn { padding: 5px 7px; border: 0; border-radius: 7px; background: transparent; color: var(--green); font-size: 10px; font-weight: 650; }
+    .edit-btn:hover { background: var(--green-soft); }
+    .delete-btn { width: 27px; height: 27px; border: 0; border-radius: 8px; background: transparent; color: #9ba39a; font-size: 17px; }
+    .delete-btn:hover { background: #fbefeb; color: #bb5a42; }
+    .empty-state { padding: 28px 12px 30px; color: var(--muted); text-align: center; }
+    .empty-icon { display: grid; width: 48px; height: 48px; place-items: center; margin: 0 auto 12px; border-radius: 16px; background: var(--green-soft); font-size: 22px; }
+    .empty-state strong { display: block; margin-bottom: 5px; color: var(--ink); font-size: 12px; }
+    .empty-state span { font-size: 11px; }
+    .modal-backdrop { position: fixed; z-index: 5; inset: 0; display: none; align-items: center; justify-content: center; padding: 18px; background: rgba(24, 33, 25, .38); }
+    .modal-backdrop.open { display: flex; }
+    .modal { width: min(440px, 100%); padding: 25px; border-radius: 20px; background: white; box-shadow: 0 24px 80px rgba(20,30,20,.2); }
+    .modal-heading { display: flex; justify-content: space-between; align-items: start; margin-bottom: 22px; }
+    .modal-heading h2 { font-size: 19px; }
+    .modal-heading p { margin: 6px 0 0; color: var(--muted); font-size: 12px; }
+    .close-btn { width: 30px; height: 30px; border: 0; border-radius: 9px; background: #f4f5f1; color: #586156; font-size: 19px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    [hidden] { display: none !important; }
+    .field { display: grid; gap: 7px; }
+    .field.full { grid-column: 1 / -1; }
+    .field label { color: #626c60; font-size: 11px; font-weight: 650; }
+    .field input, .field select { width: 100%; height: 42px; padding: 0 11px; border: 1px solid var(--line); border-radius: 10px; outline: none; background: white; color: var(--ink); font-size: 12px; }
+    .field input:focus, .field select:focus { border-color: #8bb89a; box-shadow: 0 0 0 3px #eaf3ed; }
+    .modal-actions { display: flex; justify-content: end; gap: 9px; margin-top: 22px; }
+    .secondary-btn { min-height: 42px; padding: 0 14px; border: 1px solid var(--line); border-radius: 11px; background: white; color: #5f685d; font-size: 12px; }
+    .form-error { min-height: 16px; margin: 9px 0 0; color: #b54732; font-size: 11px; }
+    .toast { position: fixed; z-index: 8; right: 22px; bottom: 22px; padding: 12px 16px; border-radius: 12px; background: #263c2c; color: white; font-size: 12px; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transform: translateY(8px); transition: .2s; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    footer { margin-top: 26px; color: #9aa197; text-align: center; font-size: 10px; }
+    @media (max-width: 850px) {
+      .app { padding: 24px 22px 38px; }
+      .main-grid { grid-template-columns: minmax(0, 1.35fr) minmax(245px, .85fr); }
+      .summary-grid { gap: 12px; }
+      .summary-card, .panel { padding: 19px; }
+    }
+    @media (max-width: 680px) {
+      .app { padding: 19px 15px 30px; }
+      .topbar { margin-bottom: 29px; }
+      .welcome { align-items: start; }
+      .welcome-actions { justify-content: end; }
+      .welcome-actions .primary-btn { min-width: 44px; padding: 0 12px; font-size: 0; }
+      .welcome-actions .primary-btn svg { width: 19px; height: 19px; }
+      .summary-grid { grid-template-columns: 1fr 1fr; }
+      .budget-card { grid-column: 1 / -1; }
+      .summary-card { min-height: 140px; padding: 17px; }
+      .amount { margin-top: 13px; font-size: 25px; }
+      .main-grid { grid-template-columns: 1fr; }
+      .right-column { grid-template-columns: 1fr; }
+      .chart { height: 160px; }
+    }
+    @media (max-width: 420px) {
+      .brand small { display: none; }
+      .currency-select { padding: 9px 7px; font-size: 11px; }
+      .avatar { width: 34px; height: 34px; }
+      .profile-trigger-name, .profile-chevron { display: none; }
+      .profile-trigger { padding: 3px; border: 0; background: transparent; }
+      .panel { padding: 17px 14px; }
+      .transaction-controls { gap: 5px; }
+      .search-input { width: 105px; }
+      .search-input, .filter-select { padding: 8px 6px; font-size: 10px; }
+      .transaction-row { grid-template-columns: 34px minmax(0, 1fr) auto auto; gap: 8px; }
+      .transaction-category { display: none; }
+      .edit-btn { padding: 5px; }
+    }
+  </style>
+</head>
+<body>
+  <section class="auth-screen" id="auth-screen" aria-labelledby="auth-title">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M17 7.5c0-1.7-2.2-3-5-3s-5 1.3-5 3 1.4 2.5 5 3 5 1.3 5 3-2.2 3-5 3-5-1.3-5-3"/></svg>
+        </span>
+        <span><strong>Expense Tracker</strong><small>Your student money buddy</small></span>
+      </div>
+      <h1 id="auth-title">Welcome back</h1>
+      <p class="auth-intro" id="auth-intro">Log in to see your personal expenses and profile.</p>
+      <div class="auth-tabs" role="tablist" aria-label="Account access">
+        <button class="auth-tab active" id="login-tab" type="button" role="tab" aria-selected="true">Log in</button>
+        <button class="auth-tab" id="signup-tab" type="button" role="tab" aria-selected="false">Sign up</button>
+      </div>
+      <form class="auth-form" id="auth-form">
+        <div class="field auth-name-field" id="auth-name-field" hidden>
+          <label for="auth-name">Your name</label>
+          <input id="auth-name" name="name" type="text" maxlength="50" autocomplete="name" placeholder="e.g. Alex Morgan">
+        </div>
+        <div class="field">
+          <label for="auth-email">Email</label>
+          <input id="auth-email" name="email" type="email" maxlength="254" autocomplete="email" required placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label for="auth-password">Password</label>
+          <input id="auth-password" name="password" type="password" minlength="8" autocomplete="current-password" required placeholder="At least 8 characters">
+        </div>
+        <button class="primary-btn" id="auth-submit" type="submit">Log in</button>
+      </form>
+      <p class="auth-message" id="auth-message" role="status"></p>
+      <p class="auth-setup" id="auth-setup" hidden>To enable accounts, add your Supabase project URL and publishable (anon) key in the configuration near the top of this page (never use a service_role key), then run <strong>supabase-schema.sql</strong> in the Supabase SQL Editor. Serve this page over localhost or HTTPS.</p>
+    </div>
+  </section>
+  <main class="app" id="tracker-app" hidden>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M17 7.5c0-1.7-2.2-3-5-3s-5 1.3-5 3 1.4 2.5 5 3 5 1.3 5 3-2.2 3-5 3-5-1.3-5-3"/></svg>
+        </span>
+        <span>Expence Tracker<small>your student money buddy</small></span>
+      </div>
+      <div class="top-actions">
+        <label class="sr-only" for="currency">Currency</label>
+        <select class="currency-select" id="currency" aria-label="Currency">
+          <option value="INR">₹ INR</option>
+          <option value="USD">$ USD</option>
+          <option value="EUR">€ EUR</option>
+          <option value="GBP">£ GBP</option>
+        </select>
+        <div class="profile-wrap" id="profile-wrap">
+          <button class="profile-trigger" id="profile-trigger" type="button" aria-label="Open student profile" aria-expanded="false" aria-controls="profile-popover">
+            <span class="avatar" id="profile-avatar" aria-hidden="true">S</span>
+            <span class="profile-trigger-name" id="profile-trigger-name">Student</span>
+            <span class="profile-chevron" aria-hidden="true">▾</span>
+          </button>
+          <section class="profile-popover" id="profile-popover" aria-labelledby="profile-name-display">
+            <div class="profile-popover-heading">
+              <span class="avatar" id="profile-popover-avatar" aria-hidden="true">S</span>
+              <div>
+                <div class="profile-name" id="profile-name-display">Student</div>
+                <div class="profile-subtitle" id="profile-subtitle">Student account</div>
+              </div>
+            </div>
+            <div class="profile-details">
+              <div><div class="profile-detail-label">College / school</div><div class="profile-detail-value" id="profile-college-display">Not added yet</div></div>
+              <div><div class="profile-detail-label">Course / major</div><div class="profile-detail-value" id="profile-course-display">Not added yet</div></div>
+              <div><div class="profile-detail-label">Year of study</div><div class="profile-detail-value" id="profile-year-display">Not added yet</div></div>
+            </div>
+            <button class="profile-edit" id="edit-profile" type="button">Edit profile</button>
+            <div class="session-actions">
+              <button class="sign-out-btn" id="sign-out" type="button">Log out</button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </header>
+
+    <section class="welcome" aria-labelledby="welcome-title">
+      <div>
+        <p class="eyebrow" id="today-label">YOUR MONEY, AT A GLANCE</p>
+        <h1 id="welcome-title">Hey there, student 👋</h1>
+        <p>A little clarity goes a long way. Here's how your money is doing.</p>
+      </div>
+      <div class="welcome-actions">
+        <button class="primary-btn money-btn" id="open-add-money" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Add money
+        </button>
+        <button class="primary-btn" id="open-add" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Add expense
+        </button>
+      </div>
+    </section>
+
+    <section class="summary-grid" aria-label="Monthly summary">
+      <article class="card summary-card budget-card">
+        <div class="card-label">
+          <span>Monthly budget</span>
+          <span class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h3"/></svg></span>
+        </div>
+        <div class="amount" id="budget-amount">₹0</div>
+        <div class="card-foot"><span id="budget-caption">Set a budget to stay on track</span><button class="budget-edit" id="edit-budget" type="button">Set budget</button></div>
+        <div class="budget-progress" role="progressbar" aria-label="Budget used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="budget-bar"></span></div>
+      </article>
+      <article class="card summary-card">
+        <div class="card-label">
+          <span>Spent this month</span>
+          <span class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="m9 13 2 2 4-4"/></svg></span>
+        </div>
+        <div class="amount" id="spent-amount">₹0</div>
+        <div class="card-foot" id="spent-caption">No expenses recorded yet</div>
+      </article>
+      <article class="card summary-card">
+        <div class="card-label">
+          <span>Left to spend</span>
+          <span class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M17 7.5c0-1.7-2.2-3-5-3s-5 1.3-5 3 1.4 2.5 5 3 5 1.3 5 3-2.2 3-5 3-5-1.3-5-3"/></svg></span>
+        </div>
+        <div class="amount" id="remaining-amount">₹0</div>
+        <div class="card-foot" id="remaining-caption">Add a monthly budget to get started</div>
+      </article>
+    </section>
+
+    <div class="main-grid">
+      <div class="left-column">
+        <section class="card panel" aria-labelledby="chart-title">
+          <div class="panel-heading">
+            <div><h2 id="chart-title">Spending overview</h2><p class="panel-subtitle">Your last 6 months</p></div>
+            <span class="month-pill" id="chart-total">This month · ₹0</span>
+          </div>
+          <div class="chart" id="chart" aria-label="Monthly spending chart"></div>
+        </section>
+        <section class="card panel transactions" aria-labelledby="transactions-title">
+          <div class="panel-heading">
+            <div><h2 id="transactions-title">Recent transactions</h2><p class="panel-subtitle">Expenses and money added</p></div>
+            <div class="transaction-controls">
+              <input class="search-input" id="search" type="search" placeholder="Search..." aria-label="Search transactions">
+              <select class="filter-select" id="filter" aria-label="Filter transactions">
+                <option value="All">All</option>
+                <option>Food</option><option>Transport</option><option>Study</option><option>Shopping</option><option>Other</option>
+                <option value="income">Money added</option>
+              </select>
+            </div>
+          </div>
+          <div class="transaction-list" id="transaction-list"></div>
+        </section>
+      </div>
+      <div class="right-column">
+        <section class="card panel" aria-labelledby="category-title">
+          <div class="panel-heading">
+            <div><h2 id="category-title">Where it goes</h2><p class="panel-subtitle">This month's categories</p></div>
+          </div>
+          <div class="category-list" id="category-list"></div>
+        </section>
+      </div>
+    </div>
+    <footer>Your profile and transactions are saved to your private account · Made for student life</footer>
+  </main>
+
+  <div class="modal-backdrop" id="expense-modal" role="presentation">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-heading">
+        <div><h2 id="modal-title">Add an expense</h2><p id="modal-description">Every little detail helps you stay on top of things.</p></div>
+        <button class="close-btn" type="button" id="close-modal" aria-label="Close">×</button>
+      </div>
+      <form id="expense-form">
+        <div class="form-grid">
+          <div class="field full"><label id="note-label" for="expense-note">What did you spend on?</label><input id="expense-note" name="note" type="text" maxlength="60" placeholder="e.g. Coffee with friends" required></div>
+          <div class="field"><label for="expense-amount">Amount</label><input id="expense-amount" name="amount" type="number" min="0.01" step="0.01" placeholder="0.00" required></div>
+          <div class="field" id="category-field"><label for="expense-category">Category</label><select id="expense-category" name="category"><option>Food</option><option>Transport</option><option>Study</option><option>Shopping</option><option>Other</option></select></div>
+          <div class="field full"><label for="expense-date">Date</label><input id="expense-date" name="date" type="date" required></div>
+        </div>
+        <p class="form-error" id="form-error" role="alert"></p>
+        <div class="modal-actions">
+          <button class="secondary-btn" type="button" id="cancel-modal">Cancel</button>
+          <button class="primary-btn" id="save-transaction" type="submit">Save expense</button>
+        </div>
+      </form>
+    </section>
+  </div>
+  <div class="modal-backdrop" id="profile-modal" role="presentation">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
+      <div class="modal-heading">
+        <div><h2 id="profile-modal-title">Your student profile</h2><p>Add a few details to make your tracker yours.</p></div>
+        <button class="close-btn" type="button" id="close-profile-modal" aria-label="Close">×</button>
+      </div>
+      <form id="profile-form">
+        <div class="form-grid">
+          <div class="field full"><label for="student-name">Your name</label><input id="student-name" name="name" type="text" maxlength="50" placeholder="e.g. Alex Morgan" required></div>
+          <div class="field full"><label for="student-college">College or school</label><input id="student-college" name="college" type="text" maxlength="80" placeholder="e.g. City University"></div>
+          <div class="field full"><label for="student-course">Course or major</label><input id="student-course" name="course" type="text" maxlength="80" placeholder="e.g. Computer Science"></div>
+          <div class="field full"><label for="student-year">Year of study</label><select id="student-year" name="year"><option value="">Select year (optional)</option><option value="Year 1">Year 1</option><option value="Year 2">Year 2</option><option value="Year 3">Year 3</option><option value="Year 4">Year 4</option><option value="Year 5+">Year 5+</option><option value="Graduate">Graduate</option><option value="Other">Other</option></select></div>
+        </div>
+        <p class="form-error" id="profile-form-error" role="alert"></p>
+        <div class="modal-actions">
+          <button class="secondary-btn" type="button" id="cancel-profile-modal">Cancel</button>
+          <button class="primary-btn" type="submit">Save profile</button>
+        </div>
+      </form>
+    </section>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    (() => {
+      "use strict";
+
+      // Use the public publishable/anon key here, never a service_role key.
+      const SUPABASE_URL = "https://jjyjxgebuxzowzzwsssl.supabase.co";
+      const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_7Vskzj7CKobZmKDbIRybzg_rkLIKtHP";
+      const SUPABASE_TABLE = "student_accounts";
+      const STORAGE_KEY = "penny-student-expenses-v1";
+      const CURRENCIES = { INR: "en-IN", USD: "en-US", EUR: "de-DE", GBP: "en-GB" };
+      const CATEGORY_STYLES = {
+        Food: { icon: "🍜", background: "#fff1e8" },
+        Transport: { icon: "🚌", background: "#eaf0ff" },
+        Study: { icon: "📚", background: "#f1ebff" },
+        Shopping: { icon: "🛍️", background: "#ffeaf0" },
+        Other: { icon: "✨", background: "#f2f3e6" }
+      };
+      function createDefaultState(name = "Student") {
+        return {
+          expenses: [],
+          budget: 0,
+          currency: "INR",
+          profile: { name, college: "", course: "", year: "" }
+        };
+      }
+
+      function normalizeState(saved, fallbackName = "Student") {
+        if (!saved || !Array.isArray(saved.expenses)) throw new Error("Saved account data has an invalid format.");
+        const expenses = saved.expenses.filter((item) =>
+          item && typeof item.id === "string" &&
+          typeof item.note === "string" &&
+          Number.isFinite(item.amount) && item.amount > 0 &&
+          (item.type === undefined || item.type === "expense" || item.type === "income") &&
+          (item.type === "income" || Object.prototype.hasOwnProperty.call(CATEGORY_STYLES, item.category)) &&
+          typeof item.date === "string" && !Number.isNaN(new Date(item.date + "T00:00:00").getTime())
+        ).map((item) => ({
+          ...item,
+          type: item.type || "expense",
+          category: item.type === "income" ? "Money added" : item.category
+        }));
+        const savedProfile = saved.profile && typeof saved.profile === "object" ? saved.profile : {};
+        const profileText = (value, maxLength) => typeof value === "string" ? value.trim().slice(0, maxLength) : "";
+        return {
+          expenses,
+          budget: Number.isFinite(saved.budget) && saved.budget >= 0 ? saved.budget : 0,
+          currency: Object.prototype.hasOwnProperty.call(CURRENCIES, saved.currency) ? saved.currency : "INR",
+          profile: {
+            name: profileText(savedProfile.name, 50) || fallbackName,
+            college: profileText(savedProfile.college, 80),
+            course: profileText(savedProfile.course, 80),
+            year: profileText(savedProfile.year, 20)
+          }
+        };
+      }
+
+      function loadLocalState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return null;
+          return normalizeState(JSON.parse(raw));
+        } catch (error) {
+          console.error("Unable to read existing browser data for import:", error);
+          return null;
+        }
+      }
+
+      const $ = (id) => document.getElementById(id);
+      let state = createDefaultState();
+      let supabaseClient = null;
+      let authenticatedUser = null;
+      let accountDataReady = false;
+      let loadedUserId = null;
+      let loadingUserId = null;
+      let authGeneration = 0;
+      let sessionLoad = Promise.resolve();
+      let saveQueue = Promise.resolve();
+      let isSignupMode = false;
+      const monthName = (date) => date.toLocaleDateString(undefined, { month: "short" });
+      const thisMonth = () => {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      };
+      const localDateString = (date = new Date()) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+      const expenseMonth = (expense) => expense.date.slice(0, 7);
+      const formatMoney = (amount) => new Intl.NumberFormat(CURRENCIES[state.currency], {
+        style: "currency", currency: state.currency, maximumFractionDigits: 0
+      }).format(amount);
+      const currentTransactions = () => state.expenses.filter((item) => expenseMonth(item) === thisMonth());
+      const currentExpenses = () => currentTransactions().filter((item) => item.type !== "income");
+      const currentIncome = () => currentTransactions().filter((item) => item.type === "income");
+
+      function showToast(message) {
+        const toast = $("toast");
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(showToast.timer);
+        showToast.timer = setTimeout(() => toast.classList.remove("show"), 2600);
+      }
+
+      function setAuthMessage(message, type = "") {
+        const element = $("auth-message");
+        element.textContent = message;
+        element.className = `auth-message${type ? ` ${type}` : ""}`;
+      }
+
+      function saveState() {
+        if (!supabaseClient || !authenticatedUser || !accountDataReady) {
+          showToast("Your account is not ready. Please log in again.");
+          return Promise.resolve(false);
+        }
+        const userId = authenticatedUser.id;
+        const generation = authGeneration;
+        const data = JSON.parse(JSON.stringify(state));
+        const operation = saveQueue.then(async () => {
+          if (!accountDataReady || !authenticatedUser || authenticatedUser.id !== userId || authGeneration !== generation) {
+            throw new Error("Your account changed before the data could be saved.");
+          }
+          const { error } = await supabaseClient.from(SUPABASE_TABLE).upsert({
+            user_id: userId,
+            data,
+            updated_at: new Date().toISOString()
+          }, { onConflict: "user_id" });
+          if (error) throw error;
+          return true;
+        });
+        saveQueue = operation.catch(() => undefined);
+        return operation.catch((error) => {
+          console.error("Unable to save account data:", error);
+          showToast(`Could not save to your account: ${error.message || "Please try again."}`);
+          return false;
+        });
+      }
+
+      function setAuthMode(signup) {
+        isSignupMode = signup;
+        $("auth-name-field").hidden = !signup;
+        $("auth-name").required = signup;
+        $("auth-password").autocomplete = signup ? "new-password" : "current-password";
+        $("auth-title").textContent = signup ? "Create your account" : "Welcome back";
+        $("auth-intro").textContent = signup
+          ? "Create a private account to keep your student profile and finances in sync."
+          : "Log in to see your personal expenses and profile.";
+        $("auth-submit").textContent = signup ? "Create account" : "Log in";
+        $("login-tab").classList.toggle("active", !signup);
+        $("signup-tab").classList.toggle("active", signup);
+        $("login-tab").setAttribute("aria-selected", String(!signup));
+        $("signup-tab").setAttribute("aria-selected", String(signup));
+        setAuthMessage("");
+      }
+
+      function clearAccountView() {
+        authGeneration++;
+        loadingUserId = null;
+        loadedUserId = null;
+        authenticatedUser = null;
+        accountDataReady = false;
+        state = createDefaultState();
+        $("tracker-app").hidden = true;
+        $("auth-screen").hidden = false;
+        $("currency").value = state.currency;
+        $("profile-subtitle").textContent = "Student account";
+        closeModal();
+        closeProfileModal();
+        $("profile-popover").classList.remove("open");
+        $("profile-trigger").setAttribute("aria-expanded", "false");
+        $("toast").classList.remove("show");
+        renderProfile();
+        render();
+      }
+
+      async function loadAccount(user, generation) {
+        authenticatedUser = user;
+        accountDataReady = false;
+        setAuthMessage("Loading your private account data…");
+        const { data: row, error } = await supabaseClient
+          .from(SUPABASE_TABLE)
+          .select("data")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (error) throw error;
+        if (generation !== authGeneration) return;
+
+        if (row) {
+          state = normalizeState(row.data, user.user_metadata?.full_name || "Student");
+        } else {
+          const localState = loadLocalState();
+          const hasLocalData = localState && (
+            localState.expenses.length > 0 ||
+            localState.budget > 0 ||
+            localState.profile.name !== "Student" ||
+            localState.profile.college ||
+            localState.profile.course ||
+            localState.profile.year
+          );
+          const accountName = typeof user.user_metadata?.full_name === "string"
+            ? user.user_metadata.full_name.trim().slice(0, 50) || "Student"
+            : "Student";
+          state = hasLocalData && window.confirm(
+            "This browser has existing tracker data. Import it into this account? It will be saved to your private account and won't be available to other logins."
+          ) ? localState : createDefaultState(accountName);
+
+          const { error: insertError } = await supabaseClient.from(SUPABASE_TABLE).insert({
+            user_id: user.id,
+            data: state
+          });
+          if (insertError) throw insertError;
+          if (generation !== authGeneration) return;
+        }
+
+        accountDataReady = true;
+        loadedUserId = user.id;
+        loadingUserId = null;
+        $("currency").value = state.currency;
+        $("profile-subtitle").textContent = user.email || "Student account";
+        $("tracker-app").hidden = false;
+        $("auth-screen").hidden = true;
+        setAuthMessage("");
+        renderProfile();
+        render();
+      }
+
+      function handleAuthSession(session) {
+        const user = session && session.user;
+        if (!user) {
+          clearAccountView();
+          return;
+        }
+        if (loadedUserId === user.id || loadingUserId === user.id) return sessionLoad;
+
+        const generation = ++authGeneration;
+        loadingUserId = user.id;
+        $("tracker-app").hidden = true;
+        $("auth-screen").hidden = false;
+        sessionLoad = loadAccount(user, generation).catch(async (error) => {
+          if (generation !== authGeneration) return;
+          console.error("Unable to load account data:", error);
+          setAuthMessage(`Could not load your account data: ${error.message || "Please check your connection and try again."}`, "error");
+          loadingUserId = null;
+          authenticatedUser = null;
+          accountDataReady = false;
+          await supabaseClient.auth.signOut();
+        });
+        return sessionLoad;
+      }
+
+      function initializeAuth() {
+        $("login-tab").addEventListener("click", () => setAuthMode(false));
+        $("signup-tab").addEventListener("click", () => setAuthMode(true));
+        const configured = SUPABASE_URL.startsWith("https://") &&
+          !SUPABASE_URL.includes("YOUR_SUPABASE") &&
+          SUPABASE_PUBLISHABLE_KEY.length > 20 &&
+          !SUPABASE_PUBLISHABLE_KEY.includes("YOUR_SUPABASE");
+        const sdk = window.supabase;
+        if (!configured || !sdk || typeof sdk.createClient !== "function") {
+          $("auth-setup").hidden = false;
+          if (configured && (!sdk || typeof sdk.createClient !== "function")) {
+            $("auth-setup").textContent = "The Supabase client did not load. Check your internet connection, then reload this page.";
+          }
+          $("auth-submit").disabled = true;
+          setAuthMessage(configured
+            ? "The Supabase client did not load. Check your internet connection and reload."
+            : "Connect your Supabase project to enable sign-up and login.", "error");
+          return;
+        }
+
+        try {
+          supabaseClient = sdk.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+        } catch (error) {
+          console.error("Unable to initialize Supabase:", error);
+          $("auth-submit").disabled = true;
+          setAuthMessage(`Could not initialize Supabase: ${error.message || "Check the project URL and publishable key."}`, "error");
+          return;
+        }
+        supabaseClient.auth.onAuthStateChange((_event, session) => {
+          setTimeout(() => handleAuthSession(session), 0);
+        });
+        supabaseClient.auth.getSession().then(({ data, error }) => {
+          if (error) throw error;
+          handleAuthSession(data.session);
+        }).catch((error) => {
+          console.error("Unable to check login session:", error);
+          setAuthMessage(`Could not check your login: ${error.message || "Please reload and try again."}`, "error");
+        });
+      }
+
+      $("auth-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!supabaseClient) {
+          setAuthMessage("Add your Supabase project URL and publishable key to enable accounts.", "error");
+          return;
+        }
+        const form = new FormData(event.currentTarget);
+        const email = String(form.get("email")).trim().toLowerCase();
+        const password = String(form.get("password"));
+        const name = String(form.get("name") || "").trim();
+        if (isSignupMode && !name) {
+          setAuthMessage("Please enter your name.", "error");
+          return;
+        }
+        const submit = $("auth-submit");
+        submit.disabled = true;
+        setAuthMessage(isSignupMode ? "Creating your account…" : "Logging in…");
+        try {
+          const result = isSignupMode
+            ? await supabaseClient.auth.signUp({
+              email,
+              password,
+              options: { data: { full_name: name.slice(0, 50) } }
+            })
+            : await supabaseClient.auth.signInWithPassword({ email, password });
+          if (result.error) throw result.error;
+          if (isSignupMode && !result.data.session) {
+            setAuthMessage("Account created. Check your email to confirm your account, then log in.", "success");
+          } else {
+            setAuthMessage(isSignupMode ? "Account created. Loading your private tracker…" : "Login successful. Loading your tracker…", "success");
+          }
+        } catch (error) {
+          console.error(isSignupMode ? "Unable to create account:" : "Unable to log in:", error);
+          setAuthMessage(error.message || "Authentication failed. Please try again.", "error");
+        } finally {
+          submit.disabled = false;
+        }
+      });
+
+      $("sign-out").addEventListener("click", async () => {
+        if (!supabaseClient) return;
+        const button = $("sign-out");
+        button.disabled = true;
+        try {
+          const { error } = await supabaseClient.auth.signOut();
+          if (error) throw error;
+        } catch (error) {
+          console.error("Unable to log out:", error);
+          showToast(`Could not log out: ${error.message || "Please try again."}`);
+        } finally {
+          button.disabled = false;
+        }
+      });
+
+      function renderSummary() {
+        const expenses = currentExpenses();
+        const income = currentIncome();
+        const monthTotal = expenses.reduce((sum, item) => sum + item.amount, 0);
+        const addedTotal = income.reduce((sum, item) => sum + item.amount, 0);
+        const available = state.budget + addedTotal;
+        $("budget-amount").textContent = formatMoney(state.budget);
+        $("spent-amount").textContent = formatMoney(monthTotal);
+        $("remaining-amount").textContent = formatMoney(available - monthTotal);
+        $("spent-caption").textContent = `${expenses.length} expense${expenses.length === 1 ? "" : "s"} this month`;
+        $("remaining-caption").textContent = income.length
+          ? `${formatMoney(addedTotal)} added this month`
+          : state.budget ? "Money added will increase your balance" : "Add a monthly budget or money to get started";
+        $("budget-caption").textContent = state.budget
+          ? `${Math.min(Math.round((monthTotal / state.budget) * 100), 999)}% of budget used`
+          : "Set a budget to stay on track";
+        $("edit-budget").textContent = state.budget ? "Edit budget" : "Set budget";
+        const percent = state.budget ? Math.min((monthTotal / state.budget) * 100, 100) : 0;
+        $("budget-bar").style.width = `${percent}%`;
+        $("budget-bar").parentElement.setAttribute("aria-valuenow", String(Math.round(percent)));
+        $("chart-total").textContent = `This month · ${formatMoney(monthTotal)}`;
+      }
+
+      function renderChart() {
+        const now = new Date();
+        const months = [];
+        for (let offset = 5; offset >= 0; offset--) {
+          const date = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+          const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+          months.push({ key, label: monthName(date), total: state.expenses
+            .filter((expense) => expense.type !== "income" && expenseMonth(expense) === key)
+            .reduce((sum, expense) => sum + expense.amount, 0) });
+        }
+        const max = Math.max(...months.map((month) => month.total), 1);
+        $("chart").innerHTML = months.map((month, index) => {
+          const barHeight = month.total ? Math.max((month.total / max) * 112, 5) : 3;
+          const current = index === months.length - 1;
+          return `<div class="chart-column${current ? " current" : ""}" aria-label="${month.label}: ${formatMoney(month.total)}">
+            <span class="chart-value">${month.total ? formatMoney(month.total) : ""}</span>
+            <div class="chart-bar" style="height:${barHeight}px"></div>
+            <span class="chart-month">${month.label}</span>
+          </div>`;
+        }).join("");
+      }
+
+      function renderCategories() {
+        const expenses = currentExpenses();
+        const totals = Object.keys(CATEGORY_STYLES).map((category) => ({
+          category,
+          total: expenses.filter((item) => item.category === category).reduce((sum, item) => sum + item.amount, 0)
+        }));
+        const max = Math.max(...totals.map((item) => item.total), 1);
+        const active = totals.filter((item) => item.total > 0);
+        if (!active.length) {
+          $("category-list").innerHTML = `<div class="empty-state"><div class="empty-icon">🪴</div><strong>Your categories will bloom here</strong><span>Add an expense to see where your money goes.</span></div>`;
+          return;
+        }
+        $("category-list").innerHTML = active.sort((a, b) => b.total - a.total).map(({ category, total }) => {
+          const style = CATEGORY_STYLES[category];
+          return `<div class="category-row">
+            <span class="category-icon" style="background:${style.background}" aria-hidden="true">${style.icon}</span>
+            <div class="category-info">
+              <div class="category-name"><span>${category}</span><span>${Math.round(total / expenses.reduce((sum, item) => sum + item.amount, 0) * 100)}%</span></div>
+              <div class="category-track"><span style="width:${total / max * 100}%"></span></div>
+            </div>
+            <span class="category-total">${formatMoney(total)}</span>
+          </div>`;
+        }).join("");
+      }
+
+      function renderTransactions() {
+        const query = $("search").value.trim().toLowerCase();
+        const category = $("filter").value;
+        const expenses = [...state.expenses]
+          .filter((item) => (category === "All" ||
+            (category === "income" ? item.type === "income" : item.type !== "income" && item.category === category)) &&
+            (!query || item.note.toLowerCase().includes(query) || (item.category || "").toLowerCase().includes(query)))
+          .sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
+        if (!expenses.length) {
+          const hasFilter = query || category !== "All";
+          $("transaction-list").innerHTML = `<div class="empty-state"><div class="empty-icon">${hasFilter ? "🔎" : "🧾"}</div><strong>${hasFilter ? "No matching transactions" : "Nothing to see just yet"}</strong><span>${hasFilter ? "Try another search or category." : "Add an expense or money received to get started."}</span></div>`;
+          return;
+        }
+        $("transaction-list").innerHTML = expenses.map((item) => {
+          const isIncome = item.type === "income";
+          const style = isIncome ? { icon: "＋", background: "var(--green-soft)" } : CATEGORY_STYLES[item.category];
+          const date = new Date(item.date + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" });
+          return `<div class="transaction-row">
+            <span class="transaction-icon" style="background:${style.background}" aria-hidden="true">${style.icon}</span>
+            <div><div class="transaction-title">${escapeHTML(item.note)}</div><div class="transaction-meta">${date}</div></div>
+            <span class="transaction-category">${isIncome ? "Money added" : item.category}</span>
+            <span class="transaction-amount${isIncome ? " income" : ""}">${isIncome ? "+" : "−"}${formatMoney(item.amount)}</span>
+            <div class="transaction-actions">
+              <button class="edit-btn" type="button" data-edit="${escapeHTML(item.id)}" aria-label="Edit ${escapeHTML(item.note)}">Edit</button>
+              <button class="delete-btn" type="button" data-delete="${escapeHTML(item.id)}" aria-label="Delete ${escapeHTML(item.note)}">×</button>
+            </div>
+          </div>`;
+        }).join("");
+      }
+
+      function escapeHTML(value) {
+        return value.replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        })[char]);
+      }
+
+      function render() {
+        renderSummary();
+        renderChart();
+        renderCategories();
+        renderTransactions();
+      }
+
+      function renderProfile() {
+        const profile = state.profile;
+        const firstInitial = Array.from(profile.name.trim())[0] || "S";
+        $("profile-avatar").textContent = firstInitial.toUpperCase();
+        $("profile-popover-avatar").textContent = firstInitial.toUpperCase();
+        $("profile-trigger-name").textContent = profile.name;
+        $("profile-name-display").textContent = profile.name;
+        $("profile-college-display").textContent = profile.college || "Not added yet";
+        $("profile-course-display").textContent = profile.course || "Not added yet";
+        $("profile-year-display").textContent = profile.year || "Not added yet";
+        $("welcome-title").textContent = `Hey there, ${profile.name.split(/\s+/)[0]} 👋`;
+      }
+
+      const modal = $("expense-modal");
+      const profileModal = $("profile-modal");
+      const profilePopover = $("profile-popover");
+      let transactionType = "expense";
+      let editingId = null;
+      function openModal(type = "expense", item = null) {
+        transactionType = type;
+        editingId = item ? item.id : null;
+        $("form-error").textContent = "";
+        $("modal-title").textContent = editingId
+          ? `Edit ${type === "income" ? "money added" : "expense"}`
+          : type === "income" ? "Add money" : "Add an expense";
+        $("modal-description").textContent = type === "income"
+          ? "Record money you received to update your available balance."
+          : "Every little detail helps you stay on top of things.";
+        $("note-label").textContent = type === "income" ? "Where did the money come from?" : "What did you spend on?";
+        $("expense-note").placeholder = type === "income" ? "e.g. Allowance from home" : "e.g. Coffee with friends";
+        $("category-field").hidden = type === "income";
+        $("save-transaction").textContent = editingId
+          ? "Save changes" : type === "income" ? "Add money" : "Save expense";
+        $("expense-note").value = item ? item.note : "";
+        $("expense-amount").value = item ? item.amount : "";
+        $("expense-date").value = item ? item.date : localDateString();
+        $("expense-category").value = item && item.category in CATEGORY_STYLES ? item.category : "Other";
+        modal.classList.add("open");
+        $("expense-note").focus();
+      }
+      function closeModal() {
+        modal.classList.remove("open");
+        $("expense-form").reset();
+        editingId = null;
+      }
+
+      $("currency").addEventListener("change", async (event) => {
+        const previous = state.currency;
+        state.currency = event.target.value;
+        if (await saveState()) {
+          render();
+        } else {
+          state.currency = previous;
+          $("currency").value = previous;
+        }
+      });
+      $("profile-trigger").addEventListener("click", () => {
+        const open = !profilePopover.classList.contains("open");
+        profilePopover.classList.toggle("open", open);
+        $("profile-trigger").setAttribute("aria-expanded", String(open));
+      });
+      document.addEventListener("click", (event) => {
+        if (!$("profile-wrap").contains(event.target)) {
+          profilePopover.classList.remove("open");
+          $("profile-trigger").setAttribute("aria-expanded", "false");
+        }
+      });
+      $("edit-profile").addEventListener("click", () => {
+        $("student-name").value = state.profile.name === "Student" ? "" : state.profile.name;
+        $("student-college").value = state.profile.college;
+        $("student-course").value = state.profile.course;
+        $("student-year").value = state.profile.year;
+        $("profile-form-error").textContent = "";
+        profilePopover.classList.remove("open");
+        $("profile-trigger").setAttribute("aria-expanded", "false");
+        profileModal.classList.add("open");
+        $("student-name").focus();
+      });
+      function closeProfileModal() {
+        profileModal.classList.remove("open");
+        $("profile-form").reset();
+      }
+      $("close-profile-modal").addEventListener("click", closeProfileModal);
+      $("cancel-profile-modal").addEventListener("click", closeProfileModal);
+      profileModal.addEventListener("click", (event) => {
+        if (event.target === profileModal) closeProfileModal();
+      });
+      $("profile-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const form = new FormData(event.currentTarget);
+        const name = String(form.get("name")).trim();
+        if (!name) {
+          $("profile-form-error").textContent = "Please enter your name.";
+          return;
+        }
+        const previous = state.profile;
+        state.profile = {
+          name: name.slice(0, 50),
+          college: String(form.get("college")).trim().slice(0, 80),
+          course: String(form.get("course")).trim().slice(0, 80),
+          year: String(form.get("year")).trim().slice(0, 20)
+        };
+        if (await saveState()) {
+          closeProfileModal();
+          renderProfile();
+          showToast("Your profile has been updated.");
+        } else {
+          state.profile = previous;
+        }
+      });
+      $("open-add").addEventListener("click", () => openModal());
+      $("open-add-money").addEventListener("click", () => openModal("income"));
+      $("close-modal").addEventListener("click", closeModal);
+      $("cancel-modal").addEventListener("click", closeModal);
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) closeModal();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return;
+        if (modal.classList.contains("open")) closeModal();
+        if (profileModal.classList.contains("open")) closeProfileModal();
+        profilePopover.classList.remove("open");
+        $("profile-trigger").setAttribute("aria-expanded", "false");
+      });
+      $("edit-budget").addEventListener("click", async () => {
+        const input = window.prompt("What's your monthly spending budget?", state.budget || "");
+        if (input === null) return;
+        const amount = Number(input);
+        if (!Number.isFinite(amount) || amount < 0) {
+          showToast("Enter a valid budget amount.");
+          return;
+        }
+        const previous = state.budget;
+        state.budget = amount;
+        if (await saveState()) render();
+        else state.budget = previous;
+      });
+      $("expense-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const form = new FormData(event.currentTarget);
+        const amount = Number(form.get("amount"));
+        const note = String(form.get("note")).trim();
+        const date = String(form.get("date"));
+        if (!note || !Number.isFinite(amount) || amount <= 0 || Number.isNaN(new Date(date + "T00:00:00").getTime())) {
+          $("form-error").textContent = "Please enter a description, valid amount, and date.";
+          return;
+        }
+        const index = editingId ? state.expenses.findIndex((item) => item.id === editingId) : -1;
+        if (editingId && index < 0) {
+          $("form-error").textContent = "This transaction could not be found. Close the form and try again.";
+          return;
+        }
+        const previous = index >= 0 ? state.expenses[index] : null;
+        const transaction = {
+          id: previous ? previous.id : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          type: transactionType,
+          note,
+          amount,
+          date,
+          category: transactionType === "income" ? "Money added" : String(form.get("category"))
+        };
+        if (index >= 0) state.expenses[index] = transaction;
+        else state.expenses.push(transaction);
+        if (await saveState()) {
+          closeModal();
+          render();
+          showToast(previous
+            ? "Transaction updated."
+            : transactionType === "income" ? "Money added to your balance." : "Expense saved. Nice and easy!");
+        } else {
+          if (index >= 0 && previous) state.expenses[index] = previous;
+          else state.expenses.pop();
+        }
+      });
+      $("search").addEventListener("input", renderTransactions);
+      $("filter").addEventListener("change", renderTransactions);
+      $("transaction-list").addEventListener("click", async (event) => {
+        const editButton = event.target.closest("[data-edit]");
+        if (editButton) {
+          const item = state.expenses.find((transaction) => transaction.id === editButton.dataset.edit);
+          if (item) openModal(item.type === "income" ? "income" : "expense", item);
+          return;
+        }
+        const deleteButton = event.target.closest("[data-delete]");
+        if (!deleteButton) return;
+        const index = state.expenses.findIndex((item) => item.id === deleteButton.dataset.delete);
+        if (index < 0) return;
+        const [removed] = state.expenses.splice(index, 1);
+        if (!await saveState()) {
+          state.expenses.splice(index, 0, removed);
+          return;
+        }
+        render();
+        showToast(removed.type === "income" ? "Money entry removed." : "Expense removed.");
+      });
+      const today = new Date();
+      $("today-label").textContent = today.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }).toUpperCase();
+      initializeAuth();
+    })();
+  </script>
+</body>
+</html>
